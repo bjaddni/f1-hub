@@ -1,0 +1,16 @@
+{
+  "name": "f1-hub",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Private F1 stats app: standings and a championship what-if simulator, powered by Jolpica-F1.",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "build:data": "node scripts/build-driver-seasons.mjs",
+    "tune": "node scripts/tune-dreamgrid.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

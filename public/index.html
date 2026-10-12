@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>F1 Hub</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>F1 <span>Hub</span></h1>
+    <nav>
+      <button data-tab="standings" class="active">Standings</button>
+      <button data-tab="drivers">Drivers</button>
+      <button data-tab="tracks">Tracks</button>
+      <button data-tab="h2h">Head-to-head</button>
+      <button data-tab="whatif">What-if</button>
+      <button data-tab="dream">Dream Grid</button>
+    </nav>
+    <p id="meta" class="meta"></p>
+  </header>
+  <main id="app"><p class="status">Loading season…</p></main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
