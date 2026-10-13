@@ -25,6 +25,12 @@ function saveScenario() {
   }
 }
 
+/** On a phone the result of a tap can be far from the thing tapped (the layout is one column): scroll it into view. */
+function revealOnPhone(selector) {
+  if (!matchMedia('(max-width: 860px)').matches) return;
+  document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // ---------- shared table ----------
 
 function standingsTable(rows, { kind, flags, maxLeft }) {
@@ -252,7 +258,7 @@ function renderDrivers() {
       matrix.map((m) =>
         h(
           'tr',
-          { class: `pick ${m === selected ? 'selected' : ''}`, onclick: () => { state.trackId = m.circuit.circuitId; rerender(); } },
+          { class: `pick ${m === selected ? 'selected' : ''}`, onclick: () => { state.trackId = m.circuit.circuitId; rerender(); revealOnPhone('.col-right'); } },
           h('td', { class: 'name' }, h('span', {}, m.circuit.circuit.replace(/ (Circuit|International Circuit)$/, '')), h('small', { class: 'muted' }, ` R${m.circuit.round}`)),
           ERAS.map((e) => matrixCell(m.eras[e.id])),
           matrixCell(m.all),
@@ -378,7 +384,7 @@ function renderH2H() {
   const trackRows = h2hByTrack(all, races).map((t) =>
     h(
       'tr',
-      { class: `pick ${h2h.trackId === t.circuit.circuitId ? 'selected' : ''}`, onclick: () => { h2h.trackId = t.circuit.circuitId; rerender(); } },
+      { class: `pick ${h2h.trackId === t.circuit.circuitId ? 'selected' : ''}`, onclick: () => { h2h.trackId = t.circuit.circuitId; rerender(); revealOnPhone('.score'); } },
       h('td', { class: 'name' }, shortTrack(t.circuit.circuit)),
       h('td', { class: 'num muted' }, String(t.shared)),
       h('td', { class: 'num' }, t.shared ? record(t.finishA, t.finishB) : h('span', { class: 'muted' }, '—')),
@@ -392,7 +398,7 @@ function renderH2H() {
       'div',
       { class: 'whatif' },
       h('div', { class: 'col-left wide' }, scoreboard, h('section', { class: 'card' }, h('h2', {}, 'By era'), eraTable), h('section', { class: 'card' }, h('h2', {}, 'Race by race'), raceTable)),
-      h('div', { class: 'col-right' }, h2h.trackId === 'all' ? null : trackMapCard(races.find((r) => r.circuitId === h2h.trackId)), h('section', { class: 'card' }, h('h2', {}, 'By track · click to focus'), h('p', { class: 'link-row' }, h('button', { class: 'link', onclick: () => { h2h.trackId = 'all'; rerender(); } }, 'Show all circuits')), trackTable)),
+      h('div', { class: 'col-right' }, h2h.trackId === 'all' ? null : trackMapCard(races.find((r) => r.circuitId === h2h.trackId)), h('section', { class: 'card' }, h('h2', {}, 'By track · click to focus'), h('p', { class: 'link-row' }, h('button', { class: 'link', onclick: () => { h2h.trackId = 'all'; rerender(); revealOnPhone('.score'); } }, 'Show all circuits')), trackTable)),
     ),
   );
   return root;
@@ -519,6 +525,8 @@ function rerender() {
 function selectTab(tab) {
   state.tab = tab;
   document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+  // On a phone the tab bar scrolls sideways: keep the chosen tab in view
+  document.querySelector('nav button.active')?.scrollIntoView({ inline: 'center', block: 'nearest' });
   rerender();
 }
 

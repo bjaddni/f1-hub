@@ -339,3 +339,99 @@ button:disabled { opacity: .4; cursor: not-allowed; filter: none; }
 .dg-modeopt:hover { filter: none; border-color: #3a3f49; }
 .dg-modeopt.active { border-color: var(--accent); background: #1d1113; }
 @media (max-width: 700px) { .dg-modes { grid-template-columns: 1fr; } }
+
+/* ---------- mobile ---------- */
+@media (max-width: 700px) {
+  body { font-size: 15px; -webkit-text-size-adjust: 100%; }
+
+  /* Compact header: title and season on one row, the tabs on a swipeable row underneath */
+  .topbar { gap: 4px 12px; padding: 8px 12px 0; }
+  .topbar h1 { font-size: 18px; }
+  .meta { font-size: 12px; text-align: right; }
+  nav {
+    order: 3; flex: 0 0 100%; gap: 2px; margin: 0 -12px; padding: 0 12px 6px;
+    overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  nav button { flex: 0 0 auto; white-space: nowrap; min-height: 40px; padding: 8px 14px; }
+
+  main { padding: 12px 12px 40px; }
+  .card { padding: 12px; overflow-x: auto; }
+  h2 { margin-bottom: 8px; }
+
+  /* Tables scroll sideways inside their card; the name column stays put */
+  .standings td, .standings th { padding-left: 6px; padding-right: 6px; }
+  .standings.matrix th:first-child, .standings.matrix td.name { position: sticky; left: 0; z-index: 1; background: var(--card); max-width: 130px; }
+  .standings td.cell { min-width: 62px; }
+  .standings td.cell small { font-size: 10px; }
+
+  /* Pickers: full width, 16px text so iOS doesn't zoom the page when one is focused */
+  select { font-size: 16px; min-height: 40px; }
+  .picker label, .picker select, .picker select[aria-label] { width: 100%; min-width: 0; }
+  .h2h-picker { display: grid; gap: 8px; }
+  .h2h-picker label { display: grid; gap: 4px; }
+  .h2h-picker .vs { display: none; }
+
+  button { min-height: 36px; }
+  .col-right { overflow: visible; }
+
+  /* Head-to-head score */
+  .score-main { font-size: 40px; }
+  .score-names { font-size: 14px; }
+
+  /* What-if */
+  .wi-banner { padding: 12px 14px; }
+  .wi-headline { font-size: 17px; }
+  .wi-global { width: 100%; }
+  .wi-global button { flex: 1 1 auto; }
+  .wi-board { padding: 12px; }
+  .wi-podium { gap: 6px; }
+  .wi-podium .p1 { min-height: 118px; }
+  .wi-podium .p2 { min-height: 96px; }
+  .wi-podium .p3 { min-height: 78px; }
+  .wi-podium .wi-card { padding: 6px 14px; }
+  .wi-card b { font-size: 15px; }
+  .wi-card-name { font-size: 11px; }
+  .wi-x { padding: 4px 8px; font-size: 18px; }
+  .wi-chip-driver { min-width: 52px; padding: 8px 10px; }
+  .wi-row { grid-template-columns: 20px 30px minmax(60px, 1.4fr) minmax(30px, 1fr) 38px 34px; gap: 6px; padding: 8px 6px; font-size: 13px; }
+
+  /* Dream grid */
+  .dg-hero { padding: 14px 16px; }
+  .dg-hero h1 { font-size: 36px; }
+  .dg-board { gap: 8px; }
+  .dg-slot { min-height: 0; padding: 8px; }
+  .dg-slot-empty { min-height: 70px; }
+  .dg-cards { gap: 8px; }
+  .dg-card { padding: 10px 12px; }
+  .dg-year { font-size: 22px; }
+  .dg-record { font-size: 64px; }
+  .dg-start button { flex: 1 1 auto; }
+}
+
+/* Dream Grid on phones: while drafting, show the pack first and keep the whole draft on one screen */
+@media (max-width: 700px) {
+  .dg.phase-drafting .dg-pack, .dg.phase-done .dg-result { order: 1; }
+  .dg.phase-drafting .dg-board { order: 2; }
+  .dg:not(.phase-intro) .dg-hero p { display: none; }
+  .dg:not(.phase-intro) .dg-hero { padding: 10px 14px; }
+  .dg:not(.phase-intro) .dg-hero h1 { font-size: 28px; }
+  .dg-slot-empty { min-height: 52px; }
+  .dg-slot .dg-card { padding: 8px 10px; }
+  .dg-slot .dg-name { font-size: 14px; }
+  .dg-slot .dg-year { font-size: 18px; }
+  .dg-pack-head small { display: block; }
+}
+
+@media (max-width: 700px) {
+  .standings:not(.matrix):not(.compact) .name small { display: none; }
+  .standings .pos { width: 46px; }
+  .standings .stripe { margin-right: 7px; }
+}
+
+/* Stack the two-column layouts on phones and small tablets. Written last so it beats the desktop :has() rule above. */
+@media (max-width: 860px) {
+  .whatif, .whatif:has(.col-left.wide) { grid-template-columns: minmax(0, 1fr); }
+  .col-right { position: static; max-height: none; overflow: visible; }
+}
+.col-right, .score { scroll-margin-top: 96px; } /* keep the sticky header from covering a scrolled-to section */

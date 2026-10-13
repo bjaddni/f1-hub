@@ -1,6 +1,6 @@
 // Dream Grid UI: draft cards from random packs into five grid slots, then see your season record.
 // Two modes: Normal drafts driver-decades; Hard drafts a driver in one single season, with the car.
-import { h, teamColor } from './ui.js';
+import { h, teamColor, isTouch } from './ui.js';
 import {
   SLOTS, PACK_SIZE, REROLLS, MODES, drawPack, mulberry32, hashString, seasonRecord, shareText,
 } from './dreamgrid.js';
@@ -197,6 +197,7 @@ export function renderDreamGrid({ state }) {
     }
     const store = readStore();
     const races = dataset.races;
+    root.className = `dg phase-${game.phase}`; // lets the stylesheet adapt the layout per phase (phones)
     const parts = [hero(store, races)];
     if (game.phase === 'intro') parts.push(intro(store));
     else parts.push(board());
@@ -307,7 +308,7 @@ export function renderDreamGrid({ state }) {
       h(
         'div',
         { class: 'dg-pack-head' },
-        h('div', {}, h('h2', {}, `Pick ${game.round + 1} of ${SLOTS.length}`), h('small', { class: 'muted' }, game.selected ? 'Now choose a slot' : 'Drag a driver onto a slot, or click one and then a slot')),
+        h('div', {}, h('h2', {}, `Pick ${game.round + 1} of ${SLOTS.length}`), h('small', { class: 'muted' }, game.selected ? 'Now choose a slot' : isTouch() ? 'Tap a driver, then tap a slot' : 'Drag a driver onto a slot, or click one and then a slot')),
         h('button', { class: 'ghost', disabled: left === 0, onclick: () => { reroll(); refresh(); } }, `Reroll pack (${left} left)`),
       ),
       h(

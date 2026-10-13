@@ -1,5 +1,5 @@
 // What-if: a drag-and-drop championship game. Drag drivers onto a race's finishing grid and watch the standings react.
-import { h, teamColor } from './ui.js';
+import { h, teamColor, isTouch } from './ui.js';
 import {
   RACE_POINTS,
   SPRINT_POINTS,
@@ -245,7 +245,7 @@ export function renderWhatIf({ state, save }) {
       ),
       h('div', { class: 'wi-podium' }, [1, 0, 2].filter((i) => i < table.length).map((i) => slot(i, order[i]))),
       h('div', { class: 'wi-rest' }, order.slice(3).map((id, i) => slot(i + 3, id))),
-      h('div', { class: 'wi-pool-head' }, h('b', {}, 'Drivers'), h('small', { class: 'muted' }, ui.selected ? 'Now click a position' : 'Drag onto a position, or click a driver and then a position')),
+      h('div', { class: 'wi-pool-head' }, h('b', {}, 'Drivers'), h('small', { class: 'muted' }, ui.selected ? (isTouch() ? 'Now tap a position' : 'Now click a position') : isTouch() ? 'Tap a driver, then tap a position' : 'Drag onto a position, or click a driver and then a position')),
       poolEl,
     );
   }

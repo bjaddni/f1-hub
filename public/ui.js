@@ -23,6 +23,9 @@ export function teamColor(id) {
   return `hsl(${hash % 360} 55% 55%)`;
 }
 
+/** True on phones and tablets, where "tap" is the right word and drag-and-drop is unreliable. */
+export const isTouch = () => matchMedia('(pointer: coarse)').matches;
+
 /** Tiny DOM helper: h('div', {class: 'x', onclick}, child, 'text'). Falsy props and children are skipped. */
 export function h(tag, props = {}, ...children) {
   const el = document.createElement(tag);
