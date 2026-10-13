@@ -1,6 +1,6 @@
 import { loadSeason, loadDriverHistory, loadCircuit, loadTrackShapes } from './data.js';
 import { trackSvg } from './trackmap.js';
-import { h, teamColor } from './ui.js';
+import { h, teamColor, pageHeader } from './ui.js';
 import { renderWhatIf } from './whatif.js';
 import { renderDreamGrid } from './dreamgrid-view.js';
 import { ERAS, trackMatrix, summarize, groupByEra, sharedRaces, summarizeH2H, h2hByEra, h2hByTrack, trackWinners, driverTrackStats } from './history.js';
@@ -82,22 +82,108 @@ function standingsViews(projection) {
   ];
 }
 
-// ---------- standings tab ----------
+// ---------- season tab: the dashboard ----------
 
-function renderStandings() {
-  const { remaining, completedRound } = state.season;
-  const base = projectStandings({ drivers: state.season.drivers, constructors: state.season.constructors, scenario: {} });
-  const left = remaining.length;
+const pill = (...children) => h('span', { class: 'pill' }, ...children);
+
+function leaderCard(maxLeft) {
+  const { drivers, remaining } = state.season;
+  const leader = drivers[0];
+  const second = drivers[1];
+  // Anyone who could still catch the leader if they won everything left
+  const fight = drivers.filter((d) => d.points + maxLeft >= leader.points).slice(0, 8);
+  const lead = second ? leader.points - second.points : 0;
+
+  const rows = fight.map((d) =>
+    h(
+      'div',
+      { class: 'fight-row' },
+      h('span', { class: 'fight-code' }, d.code),
+      h('div', { class: 'bar' }, h('i', { style: `width:${(d.points / leader.points) * 100}%;background:${teamColor(d.teamId)}` })),
+      h('span', { class: 'muted num' }, d === leader ? 'leader' : `−${leader.points - d.points}`),
+    ),
+  );
+  return h(
+    'section',
+    { class: 'card leader-card' },
+    h(
+      'div',
+      { class: 'leader-top' },
+      h(
+        'div',
+        { class: 'leader-main' },
+        h('span', { class: 'eyebrow' }, remaining.length ? 'Championship leader' : 'World champion'),
+        h('div', { class: 'bignum num' }, String(leader.points)),
+        h('div', {}, h('div', { class: 'leader-name' }, leader.name), h('div', { class: 'muted' }, `${leader.team} · ${leader.wins} win${leader.wins === 1 ? '' : 's'}${lead ? ` · ${lead} points clear` : ''}`)),
+      ),
+      remaining.length ? h('div', { class: 'fight' }, h('span', { class: 'eyebrow' }, 'Still in the title fight'), ...rows) : null,
+    ),
+    remaining.length
+      ? h('div', { class: 'pills' }, pill(h('b', { class: 'num' }, String(maxLeft)), ' points still on offer'), drivers.length > fight.length ? pill(`${drivers.length - fight.length} drivers are out of reach`) : null)
+      : null,
+  );
+}
+
+function nextRaceCard() {
+  const { remaining, season, drivers } = state.season;
+  if (!remaining.length) {
+    return h('section', { class: 'card next-card' }, h('span', { class: 'eyebrow' }, `${season} season`), h('h2', { class: 'next-title' }, 'Season complete'), h('p', { class: 'muted' }, `${drivers[0].name} is the world champion.`));
+  }
+  const next = remaining[0];
+  const shape = state.shapes[next.circuitId];
+  const map = h('div', { class: 'trackmap next-map' });
+  if (shape) map.innerHTML = trackSvg(shape.line);
+  const facts = shape ? [pill(h('b', { class: 'num' }, (shape.length / 1000).toFixed(3)), ' km'), shape.opened ? pill('Opened ', h('b', { class: 'num' }, String(shape.opened))) : null, shape.altitude != null ? pill(h('b', { class: 'num' }, String(shape.altitude)), ' m altitude') : null] : [];
+  const date = new Date(`${next.date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  return h(
+    'section',
+    { class: 'card next-card' },
+    h('span', { class: 'eyebrow' }, `Next · Round ${next.round} · ${date}`),
+    h('h2', { class: 'next-title' }, next.name.replace(' Grand Prix', ' GP')),
+    h('span', { class: 'muted' }, `${next.circuit} · ${next.locality}`),
+    shape ? map : null,
+    h('div', { class: 'pills' }, facts),
+    h(
+      'div',
+      { class: 'next-actions' },
+      h('button', { onclick: () => { state.trackView.trackId = next.circuitId; selectTab('tracks'); } }, 'Track history'),
+      h('button', { class: 'ghost', onclick: () => selectTab('whatif') }, 'Play it out'),
+    ),
+  );
+}
+
+function playCards() {
+  const podium = h('div', { class: 'mini-podium', 'aria-hidden': 'true' }, h('i', { class: 'p2' }), h('i', { class: 'p1' }), h('i', { class: 'p3' }));
+  const tokens = h('div', { class: 'mini-tokens', 'aria-hidden': 'true' }, ['Schumacher 2004', 'Rosberg 2016', 'Vettel 2013'].map((t, i) => h('span', { class: 'mini-token', style: `--team:${['#e8002d', '#27f4d2', '#3671c6'][i]}` }, t)));
+  const card = (tab, title, text, art) =>
+    h('button', { class: 'play-card', onclick: () => selectTab(tab) }, h('div', {}, h('span', { class: 'eyebrow' }, 'Play'), h('span', { class: 'play-title' }, title), h('span', { class: 'muted' }, text)), art);
   return h(
     'div',
-    {},
+    { class: 'play-band' },
+    card('whatif', 'What-if', 'Drag the remaining races into place and watch the title swing.', podium),
+    card('dream', 'Dream Grid', 'Draft five legends from every era and chase a perfect season.', tokens),
+  );
+}
+
+function renderStandings() {
+  const { season, completedRound, drivers, constructors, races, remaining } = state.season;
+  const base = projectStandings({ drivers, constructors, scenario: {} });
+  const left = remaining.length;
+  const maxLeft = maxRemaining(remaining);
+
+  const pips = h('div', { class: 'pips' }, races.map((r) => h('i', { class: r.round <= completedRound ? 'done' : r.round === completedRound + 1 ? 'next' : '', title: `Round ${r.round}: ${r.name}` })));
+  return h(
+    'div',
+    { class: 'dash' },
     h(
-      'p',
-      { class: 'lede' },
-      `After round ${completedRound}. ${left} race${left === 1 ? '' : 's'} remaining` +
-        (left ? `, up to ${maxRemaining(remaining)} points still available per driver.` : '.'),
+      'div',
+      { class: 'page-head' },
+      h('div', {}, h('span', { class: 'eyebrow' }, `${season} Formula 1 season`), h('h1', { class: 'page-title' }, 'Championship')),
+      h('div', { class: 'progress' }, h('div', { class: 'progress-top' }, h('span', { class: 'eyebrow' }, `Round ${completedRound} of ${races.length}`), h('span', { class: 'muted' }, left ? `${left} race${left === 1 ? '' : 's'} to go` : 'Season complete')), pips),
     ),
+    h('div', { class: 'dash-hero' }, leaderCard(maxLeft), nextRaceCard()),
     h('div', { class: 'grid' }, ...standingsViews(base)),
+    playCards(),
   );
 }
 
@@ -235,7 +321,7 @@ function renderDrivers() {
     },
     drivers.map((d) => h('option', { value: d.id, selected: d.id === driver.id }, `${d.name} · ${d.team}`)),
   );
-  const root = h('div', {}, h('div', { class: 'picker' }, h('label', {}, 'Driver ', picker)));
+  const root = h('div', {}, pageHeader('Career by era', 'Drivers', 'Every driver since 1994, split into regulation eras, at every circuit on this year\'s calendar.'), h('div', { class: 'picker' }, h('label', {}, 'Driver ', picker)));
 
   const history = historyFor(driver.id);
   const notice = historyNotice([driver]);
@@ -319,7 +405,7 @@ function renderH2H() {
       races.map((r) => h('option', { value: r.circuitId, selected: h2h.trackId === r.circuitId }, shortTrack(r.circuit))),
     ),
   );
-  const root = h('div', {}, h('div', { class: 'picker h2h-picker' }, driverSelect('Driver A', 'a', 'side-a'), h('span', { class: 'vs' }, 'vs'), driverSelect('Driver B', 'b', 'side-b'), trackSelect));
+  const root = h('div', {}, pageHeader('Compare', 'Head-to-head', 'Two drivers, every race they both started.'), h('div', { class: 'picker h2h-picker' }, driverSelect('Driver A', 'a', 'side-a'), h('span', { class: 'vs' }, 'vs'), driverSelect('Driver B', 'b', 'side-b'), trackSelect));
 
   if (A.id === B.id) {
     root.append(h('p', { class: 'status' }, 'Pick two different drivers.'));
@@ -455,7 +541,7 @@ function renderTracks() {
     { 'aria-label': 'Track', onchange: (e) => { tv.trackId = e.target.value; rerender(); } },
     races.map((r) => h('option', { value: r.circuitId, selected: r.circuitId === race.circuitId }, `R${r.round} · ${shortTrack(r.circuit)} (${r.country})`)),
   );
-  const root = h('div', {}, h('div', { class: 'picker' }, h('label', {}, 'Track ', picker)));
+  const root = h('div', {}, pageHeader('Circuits', 'Tracks', 'Who has won here, and how this year\'s grid has done, era by era.'), h('div', { class: 'picker' }, h('label', {}, 'Track ', picker)));
 
   const data = circuitFor(race.circuitId);
   if (data.status === 'loading') {
@@ -525,9 +611,8 @@ function rerender() {
 function selectTab(tab) {
   state.tab = tab;
   document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
-  // On a phone the tab bar scrolls sideways: keep the chosen tab in view
-  document.querySelector('nav button.active')?.scrollIntoView({ inline: 'center', block: 'nearest' });
   rerender();
+  window.scrollTo(0, 0);
 }
 
 async function init() {

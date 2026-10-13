@@ -37,3 +37,8 @@ export function h(tag, props = {}, ...children) {
   el.append(...children.flat().filter((c) => c != null && c !== false));
   return el;
 }
+
+/** The big page title every tab starts with: a small label, the title, and an optional line of context. */
+export function pageHeader(eyebrow, title, sub) {
+  return h('div', { class: 'page-head' }, h('div', {}, h('span', { class: 'eyebrow' }, eyebrow), h('h1', { class: 'page-title' }, title), sub ? h('span', { class: 'page-sub' }, sub) : null));
+}

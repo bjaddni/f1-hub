@@ -1,5 +1,5 @@
 // What-if: a drag-and-drop championship game. Drag drivers onto a race's finishing grid and watch the standings react.
-import { h, teamColor, isTouch } from './ui.js';
+import { h, teamColor, isTouch, pageHeader } from './ui.js';
 import {
   RACE_POINTS,
   SPRINT_POINTS,
@@ -31,7 +31,7 @@ export function renderWhatIf({ state, save }) {
   const strip = h('div', { class: 'wi-strip' });
   const board = h('section', { class: 'card wi-board' });
   const standingsPanel = h('section', { class: 'card wi-standings' });
-  const root = h('div', { class: 'wi' }, banner, h('div', { class: 'wi-main' }, h('div', { class: 'wi-left' }, strip, board), standingsPanel));
+  const root = h('div', { class: 'wi' }, pageHeader(`Play · ${remaining.length} race${remaining.length === 1 ? '' : 's'} left`, 'What-if'), banner, h('div', { class: 'wi-main' }, h('div', { class: 'wi-left' }, strip, board), standingsPanel));
 
   const race = () => remaining.find((r) => r.round === ui.round);
   const orderOf = (round, session) => state.scenario[round]?.[session] ?? [];
